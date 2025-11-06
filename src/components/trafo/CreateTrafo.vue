@@ -1,19 +1,18 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
-import { z } from "zod";
 import { Button, Dialog } from "primevue";
-import { requiredNumber, requiredString } from "../../utils/zod-helper";
+import { trafoService } from "../../service/trafo-service";
+import { useAlert } from "../../utils/toast-helper";
 import type { TrafoModel } from "../../types/trafo-type";
-import useValidation from "../../utils/zod-validation";
-import TextField from "../field/TextField.vue";
-import RadioButtonField from "../field/RadioButtonField.vue";
-import NumberField from "../field/NumberField.vue";
-import MaskField from "../field/MaskField.vue";
+import FormTrafo from "./FormTrafo.vue";
+
+const emit = defineEmits<{ (e: "submited"): void }>();
+const formElement = ref<InstanceType<typeof FormTrafo>>();
+const alert = useAlert();
 
 const visible = ref(false);
-
 const form = reactive<TrafoModel>({
-  id: "",
+  id: 0,
   name: "",
   phase: "",
   brand: "",
@@ -25,27 +24,19 @@ const form = reactive<TrafoModel>({
   longitude: null,
 });
 
-const validationSchema = z.object({
-  name: requiredString("Name"),
-  phase: requiredString("Phase"),
-  brand: requiredString("Brand"),
-  type: requiredString("Type"),
-  voltage: requiredString("Voltage"),
-  current: requiredString("Current"),
-  capacity: requiredNumber("Capacity"),
-  latitude: requiredNumber("Latitude"),
-  longitude: requiredNumber("Longitude"),
-});
-
-const { validate, isValid, getError } = useValidation(validationSchema, form, {
-  mode: "lazy",
-});
-
-const submitForm = () => {
-  validate().then(() => {
-    if (isValid.value) console.log("");
+function submitForm() {
+  formElement.value?.submit().then((valid) => {
+    if (!valid) return;
+    trafoService
+      .save(form)
+      .then(() => {
+        visible.value = false;
+        alert.success("Trafo saved successfully");
+        emit("submited");
+      })
+      .catch((e) => alert.error(e));
   });
-};
+}
 </script>
 
 <template>
@@ -57,78 +48,7 @@ const submitForm = () => {
     header="Add New Trafo"
     :style="{ width: '35rem' }"
   >
-    <form class="mt-4 flex flex-col space-y-1" @submit.prevent="submitForm">
-      <TextField
-        v-model="form.name"
-        label="Name"
-        name="name"
-        :error="getError"
-      />
-      <RadioButtonField
-        v-model="form.phase"
-        label="Phase"
-        name="phase"
-        :items="[
-          { label: '1 Phase', value: '1' },
-          { label: '3 Phase', value: '3' },
-        ]"
-        :error="getError"
-      />
-      <TextField
-        v-model="form.brand"
-        label="Brand"
-        name="brand"
-        :error="getError"
-      />
-      <TextField
-        v-model="form.type"
-        label="Type"
-        name="type"
-        :error="getError"
-      />
-
-      <label>Ratio Transformers</label>
-      <div class="grid grid-cols-2 gap-4">
-        <MaskField
-          v-model="form.voltage"
-          label="Voltage (VT)"
-          name="voltage"
-          mask="9:9"
-          placeholder="1:1"
-          :error="getError"
-        />
-        <MaskField
-          v-model="form.current"
-          label="Current (CT)"
-          name="current"
-          mask="9:9"
-          placeholder="1:1"
-          :error="getError"
-        />
-      </div>
-
-      <NumberField
-        v-model="form.capacity"
-        label="Capacity"
-        name="capacity"
-        suffix=" KVA"
-        :error="getError"
-      />
-      <NumberField
-        v-model="form.latitude"
-        label="Latitude"
-        name="latitude"
-        :maxDecimalDigits="6"
-        :error="getError"
-      />
-      <NumberField
-        v-model="form.longitude"
-        label="Longitude"
-        name="longitude"
-        :maxDecimalDigits="6"
-        :error="getError"
-      />
-    </form>
+    <FormTrafo ref="formElement" v-model="form" />
 
     <template #footer>
       <div class="pt-2 flex justify-end gap-2">

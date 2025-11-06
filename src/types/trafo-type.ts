@@ -1,5 +1,5 @@
 export type TrafoModel = {
-  id: string;
+  id: number;
   name: string;
   phase: string;
   brand: string;

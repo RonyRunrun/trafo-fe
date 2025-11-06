@@ -3,3 +3,10 @@ export type BaseResponse<T> = {
   message: string;
   data: T;
 };
+
+export type BaseResponsePagination<T> = BaseResponse<T> & {
+  page: number;
+  size: number;
+  totalElement: number;
+  totalPage: number;
+};

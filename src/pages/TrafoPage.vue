@@ -1,15 +1,26 @@
 <script setup lang="ts">
-import { Button, Card, Toolbar, DataTable, Column } from "primevue";
 import Header from "../components/Header.vue";
 import CreateTrafo from "../components/trafo/CreateTrafo.vue";
 import UpdateTrafo from "../components/trafo/UpdateTrafo.vue";
+import type { RowTrafoRes } from "../api/trafo-api";
+import { Button, Card, Toolbar, DataTable, Column } from "primevue";
+import { onMounted, ref } from "vue";
+import { trafoService } from "../service/trafo-service";
 
-const products = [
-  { code: "f23", name: "Trafo 1", capacity: "150", phase: "Tiga Phase" },
-  { code: "f24", name: "Trafo 2", capacity: "150", phase: "Tiga Phase" },
-  { code: "f25", name: "Trafo 3", capacity: "150", phase: "Tiga Phase" },
-  { code: "f26", name: "Trafo 4", capacity: "150", phase: "Tiga Phase" },
-];
+const products = ref<RowTrafoRes[]>([]);
+
+async function getDataTable() {
+  const result = await trafoService.findAll({
+    q: null,
+    page: 0,
+    size: 10,
+  });
+  products.value = result;
+}
+
+onMounted(() => {
+  getDataTable();
+});
 </script>
 
 <template>
@@ -22,7 +33,7 @@ const products = [
 
     <template #end>
       <div class="flex items-center gap-2">
-        <CreateTrafo />
+        <CreateTrafo @submited="getDataTable" />
       </div>
     </template>
   </Toolbar>
@@ -30,16 +41,25 @@ const products = [
   <Card class="mx-4 border border-gray-200">
     <template #content>
       <DataTable :value="products" tableStyle="min-width: 50rem">
+        <template #empty>
+          <div class="flex items-center justify-center h-42">
+            <div class="text-center">
+              <i class="pi pi-database text-gray-500"></i>
+              <div class="text-gray-500">No Data</div>
+            </div>
+          </div>
+        </template>
+
         <Column field="" header="No">
           <template #body="{ index }"> {{ index + 1 }} </template>
         </Column>
         <Column field="name" header="Trafo Name"></Column>
-        <Column field="capacity" header="Capacity"></Column>
-        <Column field="phase" header="Phase"></Column>
+        <Column field="kapasitas" header="Capacity"></Column>
+        <Column field="phasa" header="Phase"></Column>
         <Column field="action" header="Action">
-          <template #body>
+          <template #body="{ data }">
             <div class="flex items-center gap-2">
-              <UpdateTrafo />
+              <UpdateTrafo :trafo="data" @updated="getDataTable" />
               <Button
                 icon="pi pi-calculator"
                 severity="success"

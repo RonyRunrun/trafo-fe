@@ -9,6 +9,7 @@ import "primeicons/primeicons.css";
 
 import Aura from "@primeuix/themes/aura";
 import { definePreset } from "@primeuix/themes";
+import ToastService from "primevue/toastservice";
 
 const MyPreset = definePreset(Aura, {
   semantic: {
@@ -33,6 +34,7 @@ import { router } from "./router";
 
 const app = createApp(App);
 
+app.use(router);
 app.use(PrimeVue, {
   theme: {
     preset: MyPreset,
@@ -41,8 +43,8 @@ app.use(PrimeVue, {
     },
   },
 });
+app.use(ToastService);
 
 app.component("Button", Button);
 app.component("Form", Form);
-app.use(router);
 app.mount("#app");
